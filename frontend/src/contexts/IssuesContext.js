@@ -1,57 +1,56 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import axios from "axios";
 
 const IssuesContext = createContext();
+const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 export function IssuesProvider({ children }) {
-  const [issues, setIssues] = useState(() => {
-    const stored = localStorage.getItem("reportedIssues");
-    if (stored) {
-      // Ensure every issue has upvotes array and a unique _id
-      return JSON.parse(stored).map(issue =>
-        ({
-          ...issue,
-          upvotes: Array.isArray(issue.upvotes) ? issue.upvotes : [],
-          _id: issue._id || issue.id || Date.now().toString() + Math.random().toString(36).slice(2)
-        })
-      );
-    }
-    return [];
-  });
+  const [issues, setIssues] = useState([]);
 
+  // Fetch issues from backend on mount
   useEffect(() => {
-    localStorage.setItem("reportedIssues", JSON.stringify(issues));
-  }, [issues]);
+    const fetchIssues = async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}/api/issues`);
+        setIssues(res.data || []);
+      } catch (err) {
+        console.error("Failed to load issues from server:", err.message);
+      }
+    };
 
-  // Add a new issue (ensure upvotes array and unique _id)
-  const addIssue = (issue) =>
-    setIssues((prev) => [
-      ...prev,
-      {
-        ...issue,
-        upvotes: [],
-        _id: Date.now().toString() + Math.random().toString(36).slice(2),
-      },
-    ]);
+    fetchIssues();
+  }, []);
 
-  // Toggle upvote for an issue (add or remove upvote for user)
-  const upvoteIssue = (issueId, userId, alreadyUpvoted = false) => {
-    setIssues((prev) =>
-      prev.map((issue) => {
-        if (issue._id === issueId || issue.id === issueId) {
-          const upvotes = Array.isArray(issue.upvotes) ? issue.upvotes : [];
-          return {
-            ...issue,
-            upvotes: alreadyUpvoted
-              ? upvotes.filter((id) => id !== userId)
-              : [...upvotes, userId],
-          };
-        }
-        return issue;
-      })
-    );
+  // Add a new issue via backend
+  const addIssue = async (issue) => {
+    try {
+      const res = await axios.post(`${BASE_URL}/api/issues`, issue);
+      setIssues((prev) => [...prev, res.data]);
+    } catch (err) {
+      console.error("Failed to add issue:", err.message);
+    }
   };
 
-  // === The only addition: setIssues is now in the context value ===
+  // Upvote or remove upvote
+  const upvoteIssue = async (issueId, userEmail, alreadyUpvoted) => {
+    try {
+      const res = await axios.post(`${BASE_URL}/api/issues/upvote`, {
+        issueId,
+        userEmail,
+        hasUpvoted: alreadyUpvoted,
+      });
+
+      const updated = res.data;
+      setIssues((prev) =>
+        prev.map((issue) =>
+          (issue._id || issue.id) === issueId ? updated : issue
+        )
+      );
+    } catch (err) {
+      console.error("Upvote failed:", err.message);
+    }
+  };
+
   return (
     <IssuesContext.Provider value={{ issues, setIssues, addIssue, upvoteIssue }}>
       {children}
