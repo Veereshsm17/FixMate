@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 
 const IssuesContext = createContext();
-const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"; // updated
 
 export function IssuesProvider({ children }) {
   const [issues, setIssues] = useState([]);
@@ -11,7 +11,7 @@ export function IssuesProvider({ children }) {
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/api/issues`);
+        const res = await axios.get(`${BASE_URL}/issues`); // updated
         setIssues(res.data || []);
       } catch (err) {
         console.error("Failed to load issues from server:", err.message);
@@ -24,7 +24,7 @@ export function IssuesProvider({ children }) {
   // Add a new issue via backend
   const addIssue = async (issue) => {
     try {
-      const res = await axios.post(`${BASE_URL}/api/issues`, issue);
+      const res = await axios.post(`${BASE_URL}/issues`, issue); // updated
       setIssues((prev) => [...prev, res.data]);
     } catch (err) {
       console.error("Failed to add issue:", err.message);
@@ -34,7 +34,7 @@ export function IssuesProvider({ children }) {
   // Upvote or remove upvote
   const upvoteIssue = async (issueId, userEmail, alreadyUpvoted) => {
     try {
-      const res = await axios.post(`${BASE_URL}/api/issues/upvote`, {
+      const res = await axios.post(`${BASE_URL}/issues/upvote`, { // updated
         issueId,
         userEmail,
         hasUpvoted: alreadyUpvoted,
