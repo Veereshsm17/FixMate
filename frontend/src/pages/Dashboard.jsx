@@ -1,7 +1,11 @@
+// frontend/src/pages/Dashboard.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { Moon, Sun, Menu, X } from "lucide-react";
+
+// ✅ Use API base URL from .env (or fallback to localhost)
+const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -12,7 +16,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/user", {
+        const res = await axios.get(`${BASE_URL}/user`, {
           withCredentials: true,
         });
         setUser(res.data);
@@ -28,7 +32,7 @@ const Dashboard = () => {
   const logout = async () => {
     try {
       await axios.post(
-        "http://localhost:5000/api/logout",
+        `${BASE_URL}/logout`,
         {},
         { withCredentials: true }
       );
