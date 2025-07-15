@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
+// ✅ Define API URL at top:
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+
 export default function ResolvedIssues() {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
   useEffect(() => {
-    fetch("/api/issues?status=resolved", {
+    fetch(`${API_URL}/issues?status=resolved`, {
       headers: {
         "Content-Type": "application/json",
         // "Authorization": `Bearer ${yourToken}`,
@@ -36,7 +39,7 @@ export default function ResolvedIssues() {
   const handleDelete = async (issueId) => {
     if (!window.confirm("Are you sure you want to delete this issue?")) return;
     try {
-      const res = await fetch(`/api/admin/resolved-issues/${issueId}`, {
+      const res = await fetch(`${API_URL}/admin/resolved-issues/${issueId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
