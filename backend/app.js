@@ -11,14 +11,13 @@ const connectDB = require('./config/db');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
 connectDB();
 
 // CORS Middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // React dev server
+  origin: ['http://localhost:3000', 'https://your-frontend.vercel.app'], // ✅ Add your deployed frontend URL
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -39,7 +38,5 @@ app.use('/api', (req, res, next) => {
 // Error handling middleware
 app.use(errorMiddleware);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// ✅ Instead of app.listen, export app
+module.exports = app;
