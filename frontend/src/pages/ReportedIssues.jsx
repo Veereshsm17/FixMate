@@ -5,26 +5,26 @@ import { FaThumbsUp } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
+// ✅ Place this at top so ALL fetch and axios calls use same base!
+const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+
 export default function ReportedIssues() {
   const { issues, setIssues, upvoteIssue } = useIssues();
   const { user } = useAuth();
   const [showLoginMsg, setShowLoginMsg] = useState(false);
 
- useEffect(() => {
-  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-
-  async function fetchIssues() {
-    try {
-      const res = await axios.get(`${BASE_URL}/api/issues`);
-      setIssues(res.data);
-    } catch (err) {
-      console.error("Failed to fetch issues:", err);
-      setIssues([]);
+  useEffect(() => {
+    async function fetchIssues() {
+      try {
+        const res = await axios.get(`${BASE_URL}/issues`);
+        setIssues(res.data);
+      } catch (err) {
+        console.error("Failed to fetch issues:", err);
+        setIssues([]);
+      }
     }
-  }
-
-  fetchIssues();
-}, [setIssues]);
+    fetchIssues();
+  }, [setIssues]);
 
   const pendingIssues = issues.filter(issue => issue.status !== "resolved");
 
@@ -59,6 +59,7 @@ export default function ReportedIssues() {
     );
   };
 
+  // ✅ Use BASE_URL in admin/resolve-issue endpoint
   const handleResolve = async (issue, e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -68,7 +69,7 @@ export default function ReportedIssues() {
         : issue._id || issue.id;
 
     try {
-      const res = await fetch(`/api/admin/resolve-issue/${issueId}`, {
+      const res = await fetch(`${BASE_URL}/admin/resolve-issue/${issueId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -95,12 +96,13 @@ export default function ReportedIssues() {
     }
   };
 
+  // ✅ Use BASE_URL in admin/resolved-issues endpoint
   const handleDelete = async (issue, e) => {
     e.preventDefault();
     e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this issue?")) return;
     try {
-      await fetch(`/api/admin/resolved-issues/${issue._id || issue.id}`, {
+      await fetch(`${BASE_URL}/admin/resolved-issues/${issue._id || issue.id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${user?.token}`,
