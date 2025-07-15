@@ -16,9 +16,22 @@ const app = express();
 connectDB();
 
 // CORS Middleware
+const allowedOrigins = [
+  'https://fixmate-3.onrender.com', // Your deployed frontend
+  'http://localhost:3000'           // For local development
+];
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://your-frontend.vercel.app'], // ✅ Add your deployed frontend URL
+  origin: function(origin, callback) {
+    // Allow requests with no origin or from allowed origins
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
@@ -38,5 +51,5 @@ app.use('/api', (req, res, next) => {
 // Error handling middleware
 app.use(errorMiddleware);
 
-// ✅ Instead of app.listen, export app
+// ✅ Export app for index.js/server.js
 module.exports = app;
