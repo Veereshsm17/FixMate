@@ -2,10 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const path = require('path'); // <-- Needed for serving React
+const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 const issueRoutes = require('./routes/issueRoutes');
-const adminRoutes = require('./routes/admin'); // <-- Admin routes
+const adminRoutes = require('./routes/admin');
 const errorMiddleware = require('./middleware/errorMiddleware');
 const connectDB = require('./config/db');
 
@@ -24,7 +24,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin or from allowed origins
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -36,30 +35,27 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Body parser
 app.use(express.json());
 
-// ===== Serve static files from the React frontend build =====
-// !!! Change 'client/build' to your actual build output folder, e.g., 'build' if frontend is in root !!!
+// 1️⃣ Serve React static assets BEFORE API routes!
 app.use(express.static(path.join(__dirname, 'client/build')));
 
-// ===== API Routes =====
+// 2️⃣ API routes
 app.use('/api', authRoutes);
 app.use('/api/issues', issueRoutes);
-app.use('/api/admin', adminRoutes); // <-- Admin routes
+app.use('/api/admin', adminRoutes);
 
-// 404 handler for all unmatched /api routes (returns JSON)
+// 3️⃣ 404 for unmatched /api
 app.use('/api', (req, res, next) => {
   res.status(404).json({ error: 'API route not found' });
 });
 
-// ===== Serve React app for all other (non-API) routes =====
+// 4️⃣ Wildcard: serve React app for anything else
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
-// ===== Error handling middleware =====
+// 5️⃣ Final error handler
 app.use(errorMiddleware);
 
-// ✅ Export app for index.js/server.js
 module.exports = app;
