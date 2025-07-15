@@ -4,7 +4,6 @@ const Issue = require('../models/Issue');
 // Create a new issue
 exports.createIssue = async (req, res, next) => {
   try {
-    // Accept all fields from the frontend
     const {
       name,
       usn,
@@ -12,12 +11,11 @@ exports.createIssue = async (req, res, next) => {
       section,
       email,
       title,
-      issue,   // This is your issue description from the frontend
+      issue,    // description field from the frontend form
       photo,
       date,
     } = req.body;
 
-    // Save all fields to MongoDB, mapping 'issue' to 'description'
     const newIssue = await Issue.create({
       name,
       usn,
@@ -25,24 +23,23 @@ exports.createIssue = async (req, res, next) => {
       section,
       email,
       title,
-      description: issue, // <-- Maps frontend 'issue' to schema 'description'
+      description: issue,
       photo,
       date,
-      createdBy: req.user ? req.user._id : undefined, // If you want to track user
+      status: 'pending', // default status
+      createdBy: req.user ? req.user._id : undefined,
     });
 
     res.status(201).json(newIssue);
   } catch (error) {
-    // Send error details for easier debugging
     res.status(400).json({ error: error.message });
   }
 };
 
-// Get issues (admins see all, students see their own, public sees all)
+// Get issues (admins see all, users see own, public see all without user restriction)
 exports.getIssues = async (req, res, next) => {
   try {
     let filter = {};
-    // Only filter by user if req.user exists
     if (req.user) {
       filter = req.user.role === 'admin' ? {} : { createdBy: req.user._id };
     }
@@ -58,7 +55,7 @@ exports.getIssues = async (req, res, next) => {
   }
 };
 
-// Update an issue
+// Update an issue's status or assignee
 exports.updateIssue = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -77,6 +74,18 @@ exports.updateIssue = async (req, res, next) => {
   }
 };
 
+// Delete an issue (admin-only; protect with admin middleware in route)
+exports.deleteIssue = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const issue = await Issue.findByIdAndDelete(id);
+    if (!issue) return res.status(404).json({ message: 'Issue not found' });
+    res.json({ message: 'Issue deleted' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Add a comment to an issue
 exports.addComment = async (req, res, next) => {
   try {
@@ -89,6 +98,7 @@ exports.addComment = async (req, res, next) => {
     issue.comments.push({
       user: req.user._id,
       text,
+      date: new Date(),
     });
 
     await issue.save();
@@ -98,16 +108,41 @@ exports.addComment = async (req, res, next) => {
   }
 };
 
-// Mark an issue as resolved
+// Mark issue as resolved
 exports.resolveIssue = async (req, res, next) => {
   try {
     const { id } = req.params;
     const issue = await Issue.findById(id);
     if (!issue) return res.status(404).json({ message: 'Issue not found' });
 
-    issue.status = "resolved";
+    issue.status = 'resolved';
     await issue.save();
 
+    res.json(issue);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Upvote or remove upvote for an issue (toggle)
+exports.toggleUpvoteIssue = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userEmail = req.user.email; // Or use user._id if your Issue model stores ObjectId
+
+    const issue = await Issue.findById(id);
+    if (!issue) return res.status(404).json({ message: 'Issue not found' });
+
+    const hasUpvoted = issue.upvotes && issue.upvotes.includes(userEmail);
+    if (hasUpvoted) {
+      // Remove upvote
+      issue.upvotes = issue.upvotes.filter(email => email !== userEmail);
+    } else {
+      // Add upvote
+      issue.upvotes.push(userEmail);
+    }
+
+    await issue.save();
     res.json(issue);
   } catch (error) {
     next(error);
