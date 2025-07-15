@@ -1,9 +1,9 @@
 // src/api/issueApi.js
 import axios from 'axios';
 
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-const API_URL = `${BASE_URL}/issues`;
-const ADMIN_API_URL = `${BASE_URL}/admin`;
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = `${BASE_URL}/api/issues`;
+const ADMIN_API_URL = `${BASE_URL}/api/admin`;
 
 // User Issue APIs
 export const createIssue = async (issue, token) => {
