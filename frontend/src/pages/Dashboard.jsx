@@ -4,7 +4,6 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { Moon, Sun, Menu, X } from "lucide-react";
 
-// ✅ Use API base URL from .env (or fallback to localhost)
 const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 const Dashboard = () => {
