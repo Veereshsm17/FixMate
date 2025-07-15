@@ -3,6 +3,9 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
+// ✅ Add this line:
+const API_URL = process.env.REACT_APP_API_URL || "https://fixmate-xvg1.onrender.com/api";
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +26,8 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await fetch("/api/login", {
+      // ✅ Changed fetch URL below:
+      const res = await fetch(`${API_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
