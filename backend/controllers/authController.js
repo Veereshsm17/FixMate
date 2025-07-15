@@ -3,7 +3,7 @@ const generateToken = require('../utils/generateToken');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 
-// Registration controller
+//register controller
 exports.register = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
@@ -17,8 +17,8 @@ exports.register = async (req, res, next) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Always create as a regular user from API. To prevent role escalation, do not accept `role` from public API.
-    const user = await User.create({ name, email, password, role: 'user' });
+    // Do NOT set role here, so schema default ("student") is used!
+    const user = await User.create({ name, email, password });
 
     res.status(201).json({
       _id: user._id,
