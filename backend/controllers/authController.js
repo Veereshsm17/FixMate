@@ -1,13 +1,12 @@
-// backend/controllers/authController.js
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
 const nodemailer = require('nodemailer');
-const bcrypt = require('bcryptjs'); // <-- Added for password hashing
+const bcrypt = require('bcryptjs');
 
 // Registration controller
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Please provide all fields' });
@@ -18,36 +17,32 @@ exports.register = async (req, res, next) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = await User.create({ name, email, password, role });
+    // Always create as a regular user from API. To prevent role escalation, do not accept `role` from public API.
+    const user = await User.create({ name, email, password, role: 'user' });
 
-    // Return user info and JWT token (UPDATED)
     res.status(201).json({
       _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
-      token: generateToken(user), // <-- Pass user object, not just user._id
+      token: generateToken(user),
     });
   } catch (error) {
     next(error);
   }
 };
 
-//Login controller  
+// Login controller
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    console.log('Login attempt for email:', email);
 
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      console.log('User not found for email:', email);
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     const isMatch = await user.matchPassword(password);
-    console.log('Password match result:', isMatch);
-
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
@@ -62,11 +57,9 @@ exports.login = async (req, res, next) => {
       token: generateToken(user),
     });
   } catch (error) {
-    console.error('Login error:', error);
     next(error);
   }
 };
-
 
 // Forgot Password (OTP Generation) controller
 exports.forgotPassword = async (req, res) => {
@@ -74,7 +67,7 @@ exports.forgotPassword = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user)
-      return res.status(404).json({ error: 'No user with that email address.' });
+      return res.status(404).json({ message: 'No user with that email address.' });
 
     // Generate a 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -83,25 +76,28 @@ exports.forgotPassword = async (req, res) => {
     await user.save();
 
     // Send OTP email
+    // It's best practice to ensure MAIL_USER and MAIL_PASS are in environment variables
+    if (!process.env.MAIL_USER || !process.env.MAIL_PASS)
+      return res.status(500).json({ message: 'Email server not configured.' });
+
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.MAIL_USER || 'smveeresh22@gmail.com',
-        pass: process.env.MAIL_PASS || 'avuzqwxfrydxbisn  ',
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
       },
     });
 
     await transporter.sendMail({
       to: user.email,
-      from: process.env.MAIL_USER || 'smveeresh22@gmail.com',
+      from: process.env.MAIL_USER,
       subject: 'Your Password Reset OTP',
       text: `Your OTP for password reset is: ${otp}. It is valid for 10 minutes.`,
     });
 
     res.json({ message: 'OTP sent to your email.' });
   } catch (err) {
-    console.error('Forgot password error:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -115,16 +111,11 @@ exports.verifyOtp = async (req, res) => {
       resetPasswordOTPExpires: { $gt: Date.now() },
     });
     if (!user)
-      return res.status(400).json({ error: 'Invalid or expired OTP.' });
-
-    // Optionally, clear OTP fields now or after password reset
-    // user.resetPasswordOTP = undefined;
-    // user.resetPasswordOTPExpires = undefined;
-    // await user.save();
+      return res.status(400).json({ message: 'Invalid or expired OTP.' });
 
     res.json({ message: 'OTP verified. You may now reset your password.' });
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -138,19 +129,17 @@ exports.resetPassword = async (req, res) => {
       resetPasswordOTPExpires: { $gt: Date.now() },
     });
     if (!user) {
-      console.log('User not found or OTP expired');
-      return res.status(400).json({ error: 'Invalid or expired OTP.' });
+      return res.status(400).json({ message: 'Invalid or expired OTP.' });
     }
 
-     user.password = password;
+    // Hash password here if you do not have a pre('save') hook in User model
+    user.password = password;
     user.resetPasswordOTP = undefined;
     user.resetPasswordOTPExpires = undefined;
     await user.save();
-    console.log('Password updated for:', user.email); // <-- Add this line
 
     res.json({ message: 'Password has been reset. You can now log in.' });
   } catch (err) {
-    console.error('Error resetting password:', err); // <-- Add this line
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ message: 'Server error' });
   }
 };
