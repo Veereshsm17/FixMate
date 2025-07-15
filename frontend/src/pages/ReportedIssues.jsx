@@ -10,18 +10,21 @@ export default function ReportedIssues() {
   const { user } = useAuth();
   const [showLoginMsg, setShowLoginMsg] = useState(false);
 
-  useEffect(() => {
-    async function fetchIssues() {
-      try {
-        const res = await axios.get("http://localhost:5000/api/issues");
-        setIssues(res.data);
-      } catch (err) {
-        setIssues([]);
-      }
+ useEffect(() => {
+  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
+  async function fetchIssues() {
+    try {
+      const res = await axios.get(`${BASE_URL}/api/issues`);
+      setIssues(res.data);
+    } catch (err) {
+      console.error("Failed to fetch issues:", err);
+      setIssues([]);
     }
-    fetchIssues();
-    // eslint-disable-next-line
-  }, [setIssues]);
+  }
+
+  fetchIssues();
+}, [setIssues]);
 
   const pendingIssues = issues.filter(issue => issue.status !== "resolved");
 
