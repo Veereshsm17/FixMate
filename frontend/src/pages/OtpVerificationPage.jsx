@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 
+// ✅ Added for deploy friendliness
+const API_URL = process.env.REACT_APP_API_URL || "https://fixmate-xvg1.onrender.com/api";
+
 export default function OtpVerificationPage() {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
@@ -16,7 +19,7 @@ export default function OtpVerificationPage() {
     setMessage("");
     setLoading(true);
     try {
-      const res = await fetch("/api/forgot-password", {
+      const res = await fetch(`${API_URL}/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -37,7 +40,7 @@ export default function OtpVerificationPage() {
     setMessage("");
     setLoading(true);
     try {
-      const res = await fetch("/api/verify-otp", {
+      const res = await fetch(`${API_URL}/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),
@@ -58,7 +61,7 @@ export default function OtpVerificationPage() {
     setMessage("");
     setLoading(true);
     try {
-      const res = await fetch("/api/reset-password", {
+      const res = await fetch(`${API_URL}/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp, password }),
