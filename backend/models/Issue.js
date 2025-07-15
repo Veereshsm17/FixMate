@@ -19,7 +19,6 @@ const issueSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      // required: true, // <--- Now optional for public submissions
     },
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
@@ -33,6 +32,7 @@ const issueSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
+    upvotes: { type: [String], default: [] }, // <-- don't forget!
     // Extra fields for your form
     name: { type: String },
     usn: { type: String },
@@ -41,7 +41,7 @@ const issueSchema = new mongoose.Schema(
     email: { type: String },
     photo: { type: String },
     date: { type: String },
-    issue: { type: String },
+    // issue: { type: String }, // Not needed unless you want original
   },
   { timestamps: true }
 );
