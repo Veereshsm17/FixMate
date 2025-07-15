@@ -1,11 +1,11 @@
 // src/api/issueApi.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/issues';
-const ADMIN_API_URL = 'http://localhost:5000/api/admin';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = `${BASE_URL}/issues`;
+const ADMIN_API_URL = `${BASE_URL}/admin`;
 
 // User Issue APIs
-
 export const createIssue = async (issue, token) => {
   const res = await axios.post(API_URL, issue, {
     headers: { Authorization: `Bearer ${token}` },
@@ -35,7 +35,6 @@ export const addComment = async (id, comment, token) => {
 };
 
 // Admin APIs
-
 export const getPendingIssuesAdmin = async (token) => {
   const res = await axios.get(`${ADMIN_API_URL}/pending-issues`, {
     headers: { Authorization: `Bearer ${token}` },
