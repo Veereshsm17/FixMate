@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const path = require('path'); // <-- Needed for serving React app
 const authRoutes = require('./routes/authRoutes');
 const issueRoutes = require('./routes/issueRoutes');
 const adminRoutes = require('./routes/admin'); // <-- Admin routes
@@ -38,7 +39,10 @@ app.use(cors({
 // Body parser
 app.use(express.json());
 
-// Routes
+// ====== Serve static files from React frontend ======
+app.use(express.static(path.join(__dirname, 'client/build')));
+
+// ====== API Routes ======
 app.use('/api', authRoutes);
 app.use('/api/issues', issueRoutes);
 app.use('/api/admin', adminRoutes); // <-- Admin routes
@@ -48,7 +52,12 @@ app.use('/api', (req, res, next) => {
   res.status(404).json({ error: 'API route not found' });
 });
 
-// Error handling middleware
+// ====== Catch-all: serve React's index.html for all other GET requests ======
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+});
+
+// ====== Error handling middleware ======
 app.use(errorMiddleware);
 
 // ✅ Export app for index.js/server.js
