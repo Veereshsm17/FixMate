@@ -21,9 +21,12 @@ export default function IssueForm() {
 
   const { addIssue } = useIssues();
 
-  // Cloudinary config - replace these with your actual values
+  // ✅ Cloudinary config - update if needed
   const CLOUD_NAME = "dfencawwb";
   const UPLOAD_PRESET = "unsigned_present";
+
+  // ✅ API base URL from .env
+  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -37,7 +40,7 @@ export default function IssueForm() {
     }
   };
 
-  // Upload image to Cloudinary
+  // ✅ Upload image to Cloudinary
   const uploadToCloudinary = async (file) => {
     setUploading(true);
     const data = new FormData();
@@ -85,7 +88,7 @@ export default function IssueForm() {
 
     if (Object.keys(validationErrors).length === 0) {
       try {
-        await axios.post("http://localhost:5000/api/issues", {
+        await axios.post(`${BASE_URL}/api/issues`, {
           ...form,
           date: new Date().toLocaleString(),
         });
